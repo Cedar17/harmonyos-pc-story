@@ -284,6 +284,16 @@ SP15 加入了滚动截屏、状态栏实时网速，以及三指横滑切换最
 
 ![在文件预览中选择图库打开 JPG 时出现的提示](images/harmony-gallery-jpg.jpg)
 
+再看看计算器：
+
+![鸿蒙计算器计算 24 除以 67656](images/ch3-calculator.jpg)
+
+24/67656计算准确\[ac01\]
+
+![计算器测试中的 ac01 表情](images/ch3-calculator-ac01.png)
+
+带有鸿蒙7沉浸光感特色，按下按键会发光！基础功能反正都有，历史功能好评，感觉如果能快捷启动就更好。——找到了在控制中心里面有类似安卓磁贴的快捷方式！
+
 手写笔则是在华为店里体验的，我自己暂时没有买。星闪配对之后，华为笔记支持无界画布、各种画笔和字迹调整，基本还原了我曾经 Surface + OneNote 的体验，甚至更加流畅。不禁感叹要是我读书那会儿有这玩意儿该多爽！不过 Pro S 屏幕无法像 Surface 那样放低摊平，长时间在屏幕上书写不太方便；触控板倒是可以当数位板写，还有悬空光标提示位置。只是现在我早就不常手写记笔记了，这支笔还是先让它留在店里吧。
 
 ### 3.7 浏览器、办公和通讯：我的日常软件迁移
@@ -408,6 +418,8 @@ Windows 防火墙、端口映射这些东西也琢磨过，后来想想何必呢
 
 系统终端本身倒是挺不错，普通 SSH、Shell 和彩色命令行能用，256 色、真彩色和 btop 这样的动态界面看起来也流畅。默认终端可以在 HiShell、openEuler 和上一次终端之间选择，有点 Windows Terminal 统一管理 PowerShell、CMD 和 WSL 的感觉。最大的遗憾是不能自定义字体，我心爱的 Nerd Font 图标只能有些显示、有些变成方框。这可是大缺憾！
 
+![鸿蒙系统终端的 ANSI 色彩、256 色和真彩色测试](images/ch4-terminal-colors.jpg)
+
 SSH 也给了我一个下马威：默认读取 `~/.ssh/config` 时，报 `Bad owner or permissions`，常用的 `chmod` 在这里也没能把问题解决。最后用 `ssh -F ~/.ssh/config` 显式指定配置文件，绕开了默认配置文件的那道权限检查，算是先把连接方式找了回来。系统后来增加了密钥管理，但我遇到的配置权限问题仍在。
 
 第三方终端又试了一圈，最后留下的是 Term。第一个发现支持 Nerd Font 的！就凭这一点已经很戳我了。SSH、SFTP、快捷键和 TUI 软件用起来都挺顺，设置也丰富。
@@ -426,9 +438,15 @@ SSH 也给了我一个下马威：默认读取 `~/.ssh/config` 时，报 `Bad ow
 
 ![openEuler 中运行 Fastfetch，显示系统信息](images/ch4-openeuler-fastfetch.jpg)
 
-还有一个好玩的命令——`loh`，真就对标 WSL 了。从 HiShell 可以直接调用 Linux 子系统里的命令，不用手动切换终端；我试了 `loh` 的帮助、状态和 Fastfetch，图形也正常显示。融合开发引擎还支持 localhost 端口转发，我在 Linux 里运行 HTTP 服务，再从鸿蒙侧访问，实测体验良好。
+还有一个好玩的命令——`loh`，真就对标 WSL 了。从 HiShell 可以直接调用 Linux 子系统里的命令，不用手动切换终端；我试了 `loh` 的帮助、状态和 Fastfetch，图形也正常显示。
 
 ![从 HiShell 使用 loh 调用 openEuler 中的 Fastfetch](images/ch4-loh-fastfetch.png)
+
+作为对照，Windows + WSL 基本是一样的逻辑：下图是在 PowerShell 里调用 WSL，展示 Ubuntu 的 Fastfetch 信息。
+
+![在 PowerShell 里通过 WSL 运行 Ubuntu 的 Fastfetch](images/ch4-wsl-fastfetch.jpg)
+
+融合开发引擎还支持 localhost 端口转发，我在 Linux 里运行 HTTP 服务，再从鸿蒙侧访问，实测体验良好。
 
 ![融合开发引擎中的 localhost 端口转发设置](images/ch4-linux-localhost.png)
 
@@ -572,6 +590,8 @@ Android 应用可以通过卓易通、出境易这样的兼容环境运行；Win
 
 社区也有人通过抓包、解包发现 Android 运行镜像和容器相关线索，还有鸿蒙 PC 用户提取过兼容环境镜像。相关探索可以看看[这篇 Android 容器技术拆解](https://imgeek.net/article/825368529)和[鸿蒙 PC 镜像提取记录](https://hu60.net/q.php/bbs.topic.107434.html)。这些资料给了我一些理解方向，但我没有找到厂商公开的完整架构说明，也不能据此确定自己这台机器上两个入口究竟如何共享或区分运行环境。
 
+![根据公开资料与安装观察整理的 Android 兼容环境示意图](images/ch6-android-compat-architecture.png)
+
 ### 6.4 Windows 11 ARM：在鸿蒙里再开一台电脑
 
 应用市场里的 Windows 虚拟机有铠大师和 Oseasy，两者都能自动安装 Windows 11 ARM，不过同一时间只能启动其中一个。之前群友推荐了 Oseasy，我给它分配了 6 核、6GB 内存和 128GB 存储，先尝尝鲜；铠大师也装起来试了一圈。
@@ -657,6 +677,8 @@ HEVC HDR 顺利之后我又试了 AV1。从 YouTube 下载的《战神》新作�
 ![鸿蒙版哔哩哔哩客户端显示网络异常](images/ch7-bilibili.jpg)
 
 除了刷信息流，我还想起了在华为店里 MateBook Fold 展示机上玩过的一款榫卯解谜游戏——《匠木》。现在自己有大屏触屏电脑了，立马下载来完整体验，340MB 的大小中规中矩。
+
+![应用市场中的榫卯解谜游戏《匠木》](images/ch7-jiangmu-store.jpg)
 
 ![《匠木》的关卡选择画面](images/ch7-jiangmu.jpg)
 
