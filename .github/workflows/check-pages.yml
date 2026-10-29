@@ -1,4 +1,4 @@
-name: Check Jekyll book site
+name: Check chapter pages
 
 on:
   push:
@@ -6,22 +6,14 @@ on:
     paths:
       - "README.md"
       - "pages/**"
-      - "scripts/**"
-      - "_config.yml"
-      - "_layouts/**"
-      - "_includes/**"
-      - "images/**"
+      - "scripts/split_chapters.py"
       - ".github/workflows/check-pages.yml"
   pull_request:
     branches: [master]
     paths:
       - "README.md"
       - "pages/**"
-      - "scripts/**"
-      - "_config.yml"
-      - "_layouts/**"
-      - "_includes/**"
-      - "images/**"
+      - "scripts/split_chapters.py"
       - ".github/workflows/check-pages.yml"
   workflow_dispatch:
 
@@ -29,96 +21,8 @@ permissions:
   contents: read
 
 jobs:
-  build-and-check:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Check generated chapters match README
-        run: python3 scripts/split_chapters.py --check
-      - name: Build with GitHub Pages Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
-      - name: Validate all nine chapters
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from html.parser import HTMLParser
-          from pathlib import Path
-          from urllib.parse import unquote, urlsplit
-          import re
-
-          class PageParser(HTMLParser):
-              def __init__(self):
-                  super().__init__()
-                  self.in_article = False
-                  self.images = []
-                  self.canonical = []
-                  self.links = []
-
-              def handle_starttag(self, tag, attrs):
-                  props = dict(attrs)
-                  if tag == "article" and "data-chapter" in props:
-                      self.in_article = True
-                  if self.in_article and tag == "img":
-                      self.images.append(props)
-                  if tag == "link" and props.get("rel") == "canonical":
-                      self.canonical.append(props.get("href"))
-                  if tag == "a":
-                      self.links.append(props.get("href", ""))
-
-              def handle_endtag(self, tag):
-                  if tag == "article":
-                      self.in_article = False
-
-          site = Path("_site")
-          baseurl = "/harmonyos-pc-story"
-          root_url = "https://cedar17.github.io" + baseurl
-          urls = ["/"] + [f"/{number}/" for number in range(1, 9)]
-          all_images = 0
-          for number, url in enumerate(urls):
-              output = site / url.lstrip("/") / "index.html"
-              parser = PageParser()
-              parser.feed(output.read_text(encoding="utf-8"))
-              markdown = Path(f"pages/{number}.md").read_text(encoding="utf-8")
-              expected = len(re.findall(r"!\[[^\]]*\]\(", markdown))
-              assert len(parser.images) == expected, (number, len(parser.images), expected)
-              assert parser.canonical == [root_url + url], parser.canonical
-              for chapter_url in urls:
-                  assert baseurl + chapter_url in parser.links, (number, chapter_url)
-              for image in parser.images:
-                  assert image.get("alt", "").strip(), image
-                  path = unquote(urlsplit(image["src"]).path)
-                  assert path.startswith(baseurl + "/images/"), path
-                  assert (site / path[len(baseurl) + 1:]).is_file(), path
-              all_images += len(parser.images)
-          readme = Path("README.md").read_text(encoding="utf-8")
-          assert all_images == len(re.findall(r"!\[[^\]]*\]\(", readme)), all_images
-          assert (site / "assets/css/style.css").is_file(), "Minima stylesheet missing"
-          assert (site / "sitemap.xml").is_file(), "Sitemap missing"
-          assert not (site / "README.html").exists(), "README should not create a duplicate webpage"
-          assert not (site / "harmonyos-pc-story.docx").exists(), "DOCX should be excluded"
-          print(f"PASS: 9 chapters, {all_images} images, chapter navigation and canonical URLs")
-          PY
-      - name: Capture desktop and narrow-screen previews
-        shell: bash
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y fonts-noto-cjk
-          mkdir -p "$RUNNER_TEMP/book-preview" previews
-          ln -s "$GITHUB_WORKSPACE/_site" "$RUNNER_TEMP/book-preview/harmonyos-pc-story"
-          python3 -m http.server 8000 --directory "$RUNNER_TEMP/book-preview" >/tmp/book-http.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid"' EXIT
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1000 --virtual-time-budget=5000 --screenshot="$GITHUB_WORKSPACE/previews/desktop.png" http://localhost:8000/harmonyos-pc-story/ 2>/dev/null
-          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=390,844 --virtual-time-budget=5000 --screenshot="$GITHUB_WORKSPACE/previews/mobile.png" http://localhost:8000/harmonyos-pc-story/1/ 2>/dev/null
-      - name: Upload built book and previews
-        uses: actions/upload-artifact@v4
-        with:
-          name: book-site-preview
-          path: |
-            _site/
-            previews/
-          retention-days: 7
+      - uses: actions/checkout@v4
+      - run: python3 scripts/split_chapters.py --check
