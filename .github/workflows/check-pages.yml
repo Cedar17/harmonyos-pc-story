@@ -6,8 +6,6 @@ on:
     paths:
       - "index.md"
       - "_config.yml"
-      - "_layouts/**"
-      - "assets/**"
       - "README.md"
       - "images/**"
       - ".github/workflows/check-pages.yml"
@@ -34,49 +32,56 @@ jobs:
           from html.parser import HTMLParser
           from pathlib import Path
           from urllib.parse import unquote, urlsplit
+          import re
 
-          class ArticleParser(HTMLParser):
+          class PageParser(HTMLParser):
               def __init__(self):
                   super().__init__()
-                  self.inside = False
+                  self.in_main = False
                   self.images = []
-                  self.headings = 0
+                  self.headings = []
+                  self.canonical = []
 
               def handle_starttag(self, tag, attrs):
                   props = dict(attrs)
-                  if tag == "article" and props.get("id") == "story-body":
-                      self.inside = True
-                  if self.inside:
+                  if tag == "main":
+                      self.in_main = True
+                  if self.in_main:
                       if tag == "img":
                           self.images.append(props)
-                      if tag in ("h2", "h3"):
-                          self.headings += 1
+                      if tag in ("h1", "h2", "h3"):
+                          self.headings.append(tag)
+                  if tag == "link" and props.get("rel") == "canonical":
+                      self.canonical.append(props.get("href"))
 
               def handle_endtag(self, tag):
-                  if tag == "article":
-                      self.inside = False
+                  if tag == "main":
+                      self.in_main = False
 
           site = Path("_site")
-          html_file = site / "index.html"
-          assert html_file.is_file(), "Jekyll did not produce index.html"
-          html = html_file.read_text(encoding="utf-8")
-          parser = ArticleParser()
+          html = (site / "index.html").read_text(encoding="utf-8")
+          readme = Path("README.md").read_text(encoding="utf-8")
+          parser = PageParser()
           parser.feed(html)
-
-          assert parser.headings >= 35, f"Headings missing: {parser.headings}"
-          assert len(parser.images) == 85, f"Images missing: {len(parser.images)}/85"
+          expected_images = len(re.findall(r"!\[[^\]]*\]\(", readme))
+          assert len(parser.images) == expected_images, f"Images: {len(parser.images)}/{expected_images}"
+          assert parser.headings.count("h1") == 1, f"Expected one article title: {parser.headings}"
+          assert len(parser.headings) >= 35, f"Headings missing: {len(parser.headings)}"
           for image in parser.images:
-              assert image.get("loading") == "lazy", image
+              assert image.get("alt", "").strip(), f"Missing alt text: {image}"
               src = unquote(urlsplit(image["src"]).path)
               assert not src.startswith("/"), f"Unexpected absolute image path: {src}"
               assert (site / src).is_file(), f"Missing image: {src}"
-
           assert "include_relative README.md" not in html, "README include not rendered"
-          assert "application/ld+json" in html, "Article structured data missing"
-          assert "og:title" in html, "Open Graph metadata missing"
-          assert "https://cedar17.github.io/harmonyos-pc-story/" in html, "Canonical address missing"
-          for asset in ["assets/style.css", "assets/main.js", "assets/favicon.svg", "sitemap.xml"]:
-              assert (site / asset).is_file(), f"Missing asset: {asset}"
-          assert not (site / "harmonyos-pc-story.docx").exists(), "DOCX should be excluded from Pages"
-          print(f"PASS: {parser.headings} headings, {len(parser.images)} images, SEO metadata and static assets")
+          assert parser.canonical == ["https://cedar17.github.io/harmonyos-pc-story/"], parser.canonical
+          assert (site / "assets/css/style.css").is_file(), "Minima stylesheet missing"
+          assert (site / "sitemap.xml").is_file(), "Sitemap missing"
+          assert not (site / "harmonyos-pc-story.docx").exists(), "DOCX should be excluded"
+          print(f"PASS: {len(parser.headings)} headings, {len(parser.images)} images, canonical URL and Minima stylesheet")
           PY
+      - name: Upload built site for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: minima-site-preview
+          path: _site/
+          retention-days: 7
