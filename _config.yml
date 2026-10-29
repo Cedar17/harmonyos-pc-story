@@ -35,8 +35,6 @@ plugins:
   - jekyll-sitemap
 exclude:
   - README.md
-  - scripts
   - harmonyos-pc-story.docx
-  - .github
   - Gemfile
   - Gemfile.lock
