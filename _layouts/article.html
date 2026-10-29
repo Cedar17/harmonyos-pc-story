@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10141c">
+  {% seo %}
+  <meta property="og:image:alt" content="华为 MateBook Pro S，798g 的轻量大屏终端">
+  <link rel="icon" type="image/svg+xml" href="{{ '/assets/favicon.svg' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": {{ page.title | jsonify }},
+    "description": {{ page.description | jsonify }},
+    "image": {{ page.image | absolute_url | jsonify }},
+    "author": {
+      "@type": "Person",
+      "name": "雪松Cedar",
+      "url": "https://github.com/Cedar17"
+    },
+    "datePublished": "2026-10-29",
+    "dateModified": "2026-10-29",
+    "inLanguage": "zh-CN",
+    "mainEntityOfPage": {{ '/' | absolute_url | jsonify }}
+  }
+  </script>
+</head>
+<body>
+  <div id="reading-progress" class="reading-progress" role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="返回文章开头">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span class="brand-text">CEDAR <span class="brand-separator">/</span> FIELD NOTES</span>
+      </a>
+      <nav class="header-links" aria-label="外部链接">
+        <a href="https://github.com/Cedar17/harmonyos-pc-story" rel="noopener noreferrer">GitHub 源文 <span aria-hidden="true">↗</span></a>
+        <button class="toc-toggle" id="toc-toggle" type="button" aria-expanded="false" aria-controls="toc-sidebar">目录 <span aria-hidden="true">☰</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="reading-layout">
+    <aside class="toc-sidebar" id="toc-sidebar" aria-label="文章目录">
+      <div class="toc-heading">CONTENTS <span>章节导航</span></div>
+      <nav id="toc" aria-label="文章章节"></nav>
+      <div class="toc-bottom">从硬件到系统，从折腾到思考。</div>
+    </aside>
+
+    <main class="page-main" id="main-content">
+      <div class="article-meta">
+        <span class="eyebrow">HARMONYOS PC / PERSONAL FIELD NOTES</span>
+        <div class="meta-line">
+          <span>雪松Cedar</span>
+          <span aria-hidden="true">·</span>
+          <time datetime="2026-10-29">2026 年 10 月</time>
+          <span aria-hidden="true">·</span>
+          <span>真实体验与折腾记录</span>
+        </div>
+      </div>
+      <article class="article-content" id="story-body">
+        {{ content | replace: '<img ', '<img loading="lazy" decoding="async" ' }}
+      </article>
+      <footer class="article-footer">
+        <div class="footer-ornament" aria-hidden="true">✳</div>
+        <p>记录到这里，故事还在继续。</p>
+        <div class="footer-links">
+          <a href="https://github.com/Cedar17/harmonyos-pc-story">查看 GitHub 原文与更新 <span aria-hidden="true">↗</span></a>
+          <a href="https://github.com/Cedar17/harmonyos-pc-story/blob/master/harmonyos-pc-story.docx">DOCX 归档 <span aria-hidden="true">↗</span></a>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <button class="back-to-top" id="back-to-top" type="button" aria-label="返回顶部" title="返回顶部">↑</button>
+  <dialog id="image-lightbox" class="lightbox" aria-label="查看放大图片">
+    <button class="lightbox-close" id="lightbox-close" type="button" aria-label="关闭图片预览">×</button>
+    <img id="lightbox-image" alt="">
+    <p id="lightbox-caption"></p>
+  </dialog>
+  <script src="{{ '/assets/main.js' | relative_url }}" defer></script>
+</body>
+</html>
