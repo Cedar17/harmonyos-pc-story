@@ -1,0 +1,82 @@
+name: Check Jekyll article site
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "index.md"
+      - "_config.yml"
+      - "_layouts/**"
+      - "assets/**"
+      - "README.md"
+      - "images/**"
+      - ".github/workflows/check-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build with GitHub Pages Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Validate rendered article and local assets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import unquote, urlsplit
+
+          class ArticleParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.inside = False
+                  self.images = []
+                  self.headings = 0
+
+              def handle_starttag(self, tag, attrs):
+                  props = dict(attrs)
+                  if tag == "article" and props.get("id") == "story-body":
+                      self.inside = True
+                  if self.inside:
+                      if tag == "img":
+                          self.images.append(props)
+                      if tag in ("h2", "h3"):
+                          self.headings += 1
+
+              def handle_endtag(self, tag):
+                  if tag == "article":
+                      self.inside = False
+
+          site = Path("_site")
+          html_file = site / "index.html"
+          assert html_file.is_file(), "Jekyll did not produce index.html"
+          html = html_file.read_text(encoding="utf-8")
+          parser = ArticleParser()
+          parser.feed(html)
+
+          assert parser.headings >= 35, f"Headings missing: {parser.headings}"
+          assert len(parser.images) == 85, f"Images missing: {len(parser.images)}/85"
+          for image in parser.images:
+              assert image.get("loading") == "lazy", image
+              src = unquote(urlsplit(image["src"]).path)
+              assert not src.startswith("/"), f"Unexpected absolute image path: {src}"
+              assert (site / src).is_file(), f"Missing image: {src}"
+
+          assert "include_relative README.md" not in html, "README include not rendered"
+          assert "application/ld+json" in html, "Article structured data missing"
+          assert "og:title" in html, "Open Graph metadata missing"
+          assert "https://cedar17.github.io/harmonyos-pc-story/" in html, "Canonical address missing"
+          for asset in ["assets/style.css", "assets/main.js", "assets/favicon.svg", "sitemap.xml"]:
+              assert (site / asset).is_file(), f"Missing asset: {asset}"
+          assert not (site / "harmonyos-pc-story.docx").exists(), "DOCX should be excluded from Pages"
+          print(f"PASS: {parser.headings} headings, {len(parser.images)} images, SEO metadata and static assets")
+          PY

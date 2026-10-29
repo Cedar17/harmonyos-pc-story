@@ -1,0 +1,26 @@
+title: "798g 的轻量大屏终端：个人极客向鸿蒙 PC 折腾记"
+description: "一位习惯 Windows、Linux 和高度自主控制计算环境的极客，如何使用并理解华为 MateBook Pro S 与鸿蒙 PC：硬件、系统迁移、远程桌面、兼容层与个人体验。"
+url: "https://cedar17.github.io"
+baseurl: "/harmonyos-pc-story"
+lang: "zh-CN"
+timezone: "Asia/Shanghai"
+author:
+  name: "雪松Cedar"
+  url: "https://github.com/Cedar17"
+social:
+  name: "雪松Cedar"
+  links:
+    - "https://github.com/Cedar17"
+image: "/images/matebook-pro-s.png"
+markdown: kramdown
+kramdown:
+  input: GFM
+permalink: pretty
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+exclude:
+  - harmonyos-pc-story.docx
+  - .github
+  - Gemfile
+  - Gemfile.lock
