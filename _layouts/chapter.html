@@ -1,0 +1,17 @@
+---
+layout: base
+---
+<article class="post" data-chapter="{{ page.chapter }}">
+  <div class="post-content">
+    {% assign image_prefix = '/images/' | relative_url | prepend: 'src="' %}
+    {{ content | replace: 'src="../images/', image_prefix }}
+  </div>
+</article>
+
+<nav aria-label="章节翻页">
+  <p>
+    {% if page.previous_url %}<a href="{{ page.previous_url | relative_url }}">← {{ page.previous_title }}</a>{% endif %}
+    {% if page.previous_url and page.next_url %} · {% endif %}
+    {% if page.next_url %}<a href="{{ page.next_url | relative_url }}">{{ page.next_title }} →</a>{% endif %}
+  </p>
+</nav>

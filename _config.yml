@@ -1,7 +1,17 @@
 remote_theme: "jekyll/minima@4de322363fca5927e6f4012cb94f6dad69ab5e6c"
 minima:
   skin: auto
-title: "798g 的轻量大屏终端：个人极客向鸿蒙 PC 折腾记"
+  nav_pages:
+    - pages/0.md
+    - pages/1.md
+    - pages/2.md
+    - pages/3.md
+    - pages/4.md
+    - pages/5.md
+    - pages/6.md
+    - pages/7.md
+    - pages/8.md
+title: "鸿蒙 PC 折腾记"
 description: "💡一个习惯 Windows、Linux、root Android 和高度自主控制计算环境的用户，如何理解一台硬件出色、但遵循移动系统设计哲学的全新桌面电脑？"
 url: "https://cedar17.github.io"
 baseurl: "/harmonyos-pc-story"
@@ -24,6 +34,8 @@ plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
 exclude:
+  - README.md
+  - scripts
   - harmonyos-pc-story.docx
   - .github
   - Gemfile

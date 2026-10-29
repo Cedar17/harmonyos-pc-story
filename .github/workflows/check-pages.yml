@@ -1,12 +1,26 @@
-name: Check Jekyll article site
+name: Check Jekyll book site
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "README.md"
+      - "pages/**"
+      - "scripts/**"
+      - "_config.yml"
+      - "_layouts/**"
+      - "_includes/**"
+      - "images/**"
+      - ".github/workflows/check-pages.yml"
   pull_request:
     branches: [master]
     paths:
-      - "index.md"
-      - "_config.yml"
       - "README.md"
+      - "pages/**"
+      - "scripts/**"
+      - "_config.yml"
+      - "_layouts/**"
+      - "_includes/**"
       - "images/**"
       - ".github/workflows/check-pages.yml"
   workflow_dispatch:
@@ -20,12 +34,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Check generated chapters match README
+        run: python3 scripts/split_chapters.py --check
       - name: Build with GitHub Pages Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./
           destination: ./_site
-      - name: Validate rendered article and local assets
+      - name: Validate all nine chapters
         shell: bash
         run: |
           python3 - <<'PY'
@@ -37,51 +53,70 @@ jobs:
           class PageParser(HTMLParser):
               def __init__(self):
                   super().__init__()
-                  self.in_main = False
+                  self.in_article = False
                   self.images = []
-                  self.headings = []
                   self.canonical = []
+                  self.links = []
 
               def handle_starttag(self, tag, attrs):
                   props = dict(attrs)
-                  if tag == "main":
-                      self.in_main = True
-                  if self.in_main:
-                      if tag == "img":
-                          self.images.append(props)
-                      if tag in ("h1", "h2", "h3"):
-                          self.headings.append(tag)
+                  if tag == "article" and "data-chapter" in props:
+                      self.in_article = True
+                  if self.in_article and tag == "img":
+                      self.images.append(props)
                   if tag == "link" and props.get("rel") == "canonical":
                       self.canonical.append(props.get("href"))
+                  if tag == "a":
+                      self.links.append(props.get("href", ""))
 
               def handle_endtag(self, tag):
-                  if tag == "main":
-                      self.in_main = False
+                  if tag == "article":
+                      self.in_article = False
 
           site = Path("_site")
-          html = (site / "index.html").read_text(encoding="utf-8")
+          baseurl = "/harmonyos-pc-story"
+          root_url = "https://cedar17.github.io" + baseurl
+          urls = ["/"] + [f"/{number}/" for number in range(1, 9)]
+          all_images = 0
+          for number, url in enumerate(urls):
+              output = site / url.lstrip("/") / "index.html"
+              parser = PageParser()
+              parser.feed(output.read_text(encoding="utf-8"))
+              markdown = Path(f"pages/{number}.md").read_text(encoding="utf-8")
+              expected = len(re.findall(r"!\[[^\]]*\]\(", markdown))
+              assert len(parser.images) == expected, (number, len(parser.images), expected)
+              assert parser.canonical == [root_url + url], parser.canonical
+              for chapter_url in urls:
+                  assert baseurl + chapter_url in parser.links, (number, chapter_url)
+              for image in parser.images:
+                  assert image.get("alt", "").strip(), image
+                  path = unquote(urlsplit(image["src"]).path)
+                  assert path.startswith(baseurl + "/images/"), path
+                  assert (site / path[len(baseurl) + 1:]).is_file(), path
+              all_images += len(parser.images)
           readme = Path("README.md").read_text(encoding="utf-8")
-          parser = PageParser()
-          parser.feed(html)
-          expected_images = len(re.findall(r"!\[[^\]]*\]\(", readme))
-          assert len(parser.images) == expected_images, f"Images: {len(parser.images)}/{expected_images}"
-          assert parser.headings.count("h1") == 1, f"Expected one article title: {parser.headings}"
-          assert len(parser.headings) >= 35, f"Headings missing: {len(parser.headings)}"
-          for image in parser.images:
-              assert image.get("alt", "").strip(), f"Missing alt text: {image}"
-              src = unquote(urlsplit(image["src"]).path)
-              assert not src.startswith("/"), f"Unexpected absolute image path: {src}"
-              assert (site / src).is_file(), f"Missing image: {src}"
-          assert "include_relative README.md" not in html, "README include not rendered"
-          assert parser.canonical == ["https://cedar17.github.io/harmonyos-pc-story/"], parser.canonical
+          assert all_images == len(re.findall(r"!\[[^\]]*\]\(", readme)), all_images
           assert (site / "assets/css/style.css").is_file(), "Minima stylesheet missing"
           assert (site / "sitemap.xml").is_file(), "Sitemap missing"
+          assert not (site / "README.html").exists(), "README should not create a duplicate webpage"
           assert not (site / "harmonyos-pc-story.docx").exists(), "DOCX should be excluded"
-          print(f"PASS: {len(parser.headings)} headings, {len(parser.images)} images, canonical URL and Minima stylesheet")
+          print(f"PASS: 9 chapters, {all_images} images, chapter navigation and canonical URLs")
           PY
-      - name: Upload built site for review
+      - name: Capture desktop and narrow-screen previews
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/book-preview" previews
+          ln -s "$GITHUB_WORKSPACE/_site" "$RUNNER_TEMP/book-preview/harmonyos-pc-story"
+          python3 -m http.server 8000 --directory "$RUNNER_TEMP/book-preview" >/tmp/book-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1000 --virtual-time-budget=5000 --screenshot="$GITHUB_WORKSPACE/previews/desktop.png" http://localhost:8000/harmonyos-pc-story/ 2>/dev/null
+          google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars --window-size=390,844 --virtual-time-budget=5000 --screenshot="$GITHUB_WORKSPACE/previews/mobile.png" http://localhost:8000/harmonyos-pc-story/1/ 2>/dev/null
+      - name: Upload built book and previews
         uses: actions/upload-artifact@v4
         with:
-          name: minima-site-preview
-          path: _site/
+          name: book-site-preview
+          path: |
+            _site/
+            previews/
           retention-days: 7
