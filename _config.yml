@@ -1,6 +1,6 @@
 remote_theme: "jekyll/minima@4de322363fca5927e6f4012cb94f6dad69ab5e6c"
 title: "798g 的轻量大屏终端：个人极客向鸿蒙 PC 折腾记"
-description: "一位习惯 Windows、Linux 和高度自主控制计算环境的极客，如何使用并理解华为 MateBook Pro S 与鸿蒙 PC：硬件、系统迁移、远程桌面、兼容层与个人体验。"
+description: "💡一个习惯 Windows、Linux、root Android 和高度自主控制计算环境的用户，如何理解一台硬件出色、但遵循移动系统设计哲学的全新桌面电脑？"
 url: "https://cedar17.github.io"
 baseurl: "/harmonyos-pc-story"
 lang: "zh-CN"
