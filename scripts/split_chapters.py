@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CHAPTER_NAMES = ("序章", "第一章", "第二章", "第三章", "第四章", "第五章", "第六章", "第七章", "第八章")
 
 
 def chapter_pages():
@@ -25,16 +26,16 @@ def chapter_pages():
         metadata = {
             "layout": "chapter",
             "title": book_title if number == 0 else heading[0][3:],
-            "nav_title": "序章" if number == 0 else f"第{number}章",
+            "nav_title": CHAPTER_NAMES[number],
             "chapter": number,
             "permalink": "/" if number == 0 else f"/{number}/",
         }
         if number > 0:
             metadata["previous_url"] = "/" if number == 1 else f"/{number - 1}/"
-            metadata["previous_title"] = "序章" if number == 1 else f"第{number - 1}章"
+            metadata["previous_title"] = CHAPTER_NAMES[number - 1]
         if number < 8:
             metadata["next_url"] = f"/{number + 1}/"
-            metadata["next_title"] = f"第{number + 1}章"
+            metadata["next_title"] = CHAPTER_NAMES[number + 1]
         front_matter = "\n".join(
             f"{key}: {json.dumps(value, ensure_ascii=False)}"
             for key, value in metadata.items()
